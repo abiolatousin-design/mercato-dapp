@@ -38,31 +38,29 @@ export function SupplierInventoryImportDialog({
 }: SupplierInventoryImportDialogProps) {
   const { t } = useI18n()
   const inputRef = useRef<HTMLInputElement>(null)
-  const generationRef = useRef(0)
-  const mountedRef = useRef(true)
-  const productsRef = useRef(products)
-  const [rows, setRows] = useState<ValidatedRow>([])
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const [rows, setRows] = useState<ValidatedRow[]>([])
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
+  const [isParsing, setIsParsing] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
 
-  productsRef.current = products
-
-  const invalidate = () => {
-    generationRef.current += 1
-    setRows([])
-    setFileName('')
-    setError('')
-    setIsParsing(false)
-    if (inputRef.current) inputRef.current.value = ''
-  }
-
   useEffect(() => {
-    mountedRef.current = true
     return () => {
-      mountedRef.current = false
-      generationRef.current += 1
+      abortControllerRef.current?.abort()
+    }
+  }, [])
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = null
+      setIsParsing(false)
+      setRows([])
+      setFileName('')
+      setError('')
+      if (inputRef.current) inputRef.current.value = ''
     }
   }, [])
 
@@ -90,29 +88,38 @@ export function SupplierInventoryImportDialog({
     setRows([])
     setFileName(file.name)
     setIsParsing(true)
+
+    abortControllerRef.current?.abort()
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
+
     try {
-      const parsed = await parseFile(file)
-      if (!mountedRef.current || generation !== generationRef.current) return
+      const parsed = await parseFile(file, abortController.signal)
+      if (abortController.signal.aborted) return
+
       if (!parsed.ok) {
+        if (parsed.error === 'parse.aborted') return
         setError(t(`supplierProfile.${parsed.error}`))
         return
       }
+
       const mapped = applyColumnMapping(parsed.rows, autoMapHeaders(parsed.headers))
-      const existingSkus = new Set(targetProducts.flatMap((product) => product.sku ? [product.sku] : []))
+      const existingSkus = new Set(products.flatMap((product) => (product.sku ? [product.sku] : [])))
       setRows(validateImportRows(mapped, existingSkus))
-    } catch (parseError) {
-      if (!mountedRef.current || generation !== generationRef.current) return
-      setError(parseError instanceof Error ? parseError.message : t('supplierProfile.importFailed'))
+    } catch (err) {
+      if (abortController.signal.aborted) return
+      setError(err instanceof Error ? err.message : t('supplierProfile.importFailed'))
     } finally {
-      if (mountedRef.current && generation === generationRef.current) setIsParsing(false)
+      if (!abortController.signal.aborted) {
+        setIsParsing(false)
+      }
     }
   }
 
   const summary = computeImportSummary(rows)
 
   const handleImport = async () => {
-    if (isParsing) return
-    const importable = rows.flatMap((row) => row.importable && row.product ? [row.product] : [])
+    const importable = rows.flatMap((row) => (row.importable && row.product ? [row.product] : []))
     if (importable.length === 0) return
     const generation = generationRef.current
     const targetProducts = productsRef.current
@@ -143,19 +150,25 @@ export function SupplierInventoryImportDialog({
             type="file"
             accept=".csv,.xlsx,.xls"
             className="sr-only"
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ''
-              void handleFile(file)
-            }}
+            disabled={isParsing || isImporting}
+            onChange={(event) => void handleFile(event.target.files?.[0])}
           />
           <button
             type="button"
-            className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-8 text-center hover:bg-muted/30"
+            disabled={isParsing || isImporting}
+            className="flex w-full flex-col items-center justify-center rounded-xl border border-dashed border-border px-6 py-8 text-center hover:bg-muted/30 disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={() => inputRef.current?.click()}
           >
-            {fileName ? <FileSpreadsheet className="mb-2 h-8 w-8 text-primary" aria-hidden /> : <Upload className="mb-2 h-8 w-8 text-muted-foreground" aria-hidden />}
-            <span className="font-medium">{fileName || t('supplierProfile.importChooseFile')}</span>
+            {isParsing ? (
+              <Loader2 className="mb-2 h-8 w-8 animate-spin text-primary" aria-hidden />
+            ) : fileName ? (
+              <FileSpreadsheet className="mb-2 h-8 w-8 text-primary" aria-hidden />
+            ) : (
+              <Upload className="mb-2 h-8 w-8 text-muted-foreground" aria-hidden />
+            )}
+            <span className="font-medium">
+              {isParsing ? t('supplierProfile.importParsing') : fileName || t('supplierProfile.importChooseFile')}
+            </span>
             <span className="mt-1 text-xs text-muted-foreground">{t('supplierProfile.importFileHint')}</span>
           </button>
 
@@ -182,8 +195,14 @@ export function SupplierInventoryImportDialog({
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>{t('common.cancel')}</Button>
-          <Button type="button" disabled={summary.importable === 0 || isImporting || isParsing} onClick={() => void handleImport()}>
+          <Button type="button" variant="ghost" disabled={isImporting} onClick={() => handleOpenChange(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            type="button"
+            disabled={summary.importable === 0 || isImporting || isParsing}
+            onClick={() => void handleImport()}
+          >
             {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />}
             {t('supplierProfile.importProducts')}
           </Button>

@@ -260,11 +260,13 @@ Full list: [env.sample](env.sample). Architecture reference: [doc/architecture.m
 ```bash
 bun install
 bun lint
+bun typecheck        # app source (tsconfig.json, excludes __tests__)
+bun typecheck:tests  # tests + app (tsconfig.tests.json, includes Bun test types)
 bun build
 bun test
 ```
 
-Before opening a PR: lint + build must pass. Schema changes: new file under `supabase/migrations/` via `supabase migration new <name>`.
+Before opening a PR: lint + typecheck + typecheck:tests + build must pass. Schema changes: new file under `supabase/migrations/` via `supabase migration new <name>`.
 
 ## Common agent tasks
 

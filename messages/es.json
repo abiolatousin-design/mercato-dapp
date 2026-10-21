@@ -1122,6 +1122,9 @@
     "fundingPillExpired": "Expirada",
     "fundingPillFundedShort": "Financiada",
     "notFoundHelp": "La orden no existe o no tienes acceso.",
+    "loadError": "No pudimos cargar la orden",
+    "loadErrorHelp": "Ocurrió un error al cargar la orden. Revisa tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar",
     "toastFundOnlyInvestors": "Solo los inversionistas pueden financiar órdenes.",
     "toastFundSignIn": "Debes iniciar sesión para financiar.",
     "toastFundSuccess": "Orden financiada — proveedor pagado y comisión de plataforma cobrada.",
@@ -2152,6 +2155,15 @@
     "importDuplicates": "Duplicadas",
     "importPreviewHint": "Las filas con errores o SKU duplicados se omitirán.",
     "importFailed": "Falló la importación de productos.",
+    "importParsing": "Procesando archivo…",
+    "parse": {
+      "fileTooLarge": "El archivo supera el límite de 5 MB.",
+      "csvParseError": "No se pudo procesar el archivo CSV.",
+      "xlsxEmpty": "El archivo de Excel no contiene hojas.",
+      "xlsxNoRows": "La hoja de Excel no contiene filas de datos.",
+      "xlsxParseError": "No se pudo procesar el archivo de Excel.",
+      "unsupportedFileType": "Formato de archivo no compatible. Sube un archivo .csv, .xlsx o .xls."
+    },
     "searchProducts": "Buscar productos…",
     "searchProductsAria": "Buscar productos",
     "allCategories": "Todas las categorías",
@@ -3360,5 +3372,15 @@
       "feeWarning": "Advertencia de comisión",
       "networkWarning": "Advertencia de red"
     }
+  },
+  "errorBoundary": {
+    "title": "Algo salió mal",
+    "description": "Ocurrió un error inesperado al cargar esta sección.",
+    "retry": "Intentar de nuevo",
+    "dashboardTitle": "No se pudo cargar el panel",
+    "dashboardDescription": "No se pudieron cargar los datos del panel. Por favor intenta de nuevo.",
+    "directoryTitle": "No se pudo cargar el directorio",
+    "directoryDescription": "No se pudieron cargar los listados del directorio. Por favor intenta de nuevo.",
+    "diagnosticLabel": "Referencia del error"
   }
 }

@@ -181,6 +181,7 @@ Open [http://localhost:3000](http://localhost:3000). Connect a Stellar wallet (F
 
 ```bash
 bun lint
+bun typecheck
 bun build
 bun start
 ```

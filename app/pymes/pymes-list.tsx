@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Navigation } from '@/components/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -109,18 +108,9 @@ export function PymesList({ initialSmbs }: { initialSmbs: Smb[] }) {
   const hasActiveFilters = searchQuery || selectedCountry !== 'all' || selectedSector !== 'all'
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navigation />
-
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold tracking-tight">{t('pymesPage.title')}</h1>
-          <p className="text-muted-foreground">{t('pymesPage.subtitle')}</p>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+    <>
+      {/* Filters */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1 sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
@@ -297,7 +287,6 @@ export function PymesList({ initialSmbs }: { initialSmbs: Smb[] }) {
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </>
   )
 }

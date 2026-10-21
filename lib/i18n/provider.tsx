@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -19,6 +20,13 @@ type I18nContextValue = {
   messages: Messages
   t: (key: string, replacements?: Replacements) => string
   setLocale: (locale: Locale) => void
+}
+
+type PendingLocale = {
+  locale: Locale
+  messages: Messages
+  /** Server messages the switch was made against; new server props supersede it. */
+  basis: Messages
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null)
@@ -51,19 +59,30 @@ export function I18nProvider({
   messages: Messages
 }) {
   const router = useRouter()
-  const [activeLocale, setActiveLocale] = useState(locale)
-  const [activeMessages, setActiveMessages] = useState(messages)
+  // Server props are authoritative. A local switch is held as an optimistic
+  // pending pair only until the server delivers new props (refresh, navigation,
+  // or a refresh that rejected the switch), so locale and messages never mix.
+  const [pending, setPending] = useState<PendingLocale | null>(null)
+  const optimistic = pending?.basis === messages ? pending : null
+  const activeLocale = optimistic?.locale ?? locale
+  const activeMessages = optimistic?.messages ?? messages
+
+  useEffect(() => {
+    document.documentElement.lang = activeLocale
+  }, [activeLocale])
 
   const changeLocale = useCallback(
     (nextLocale: Locale) => {
       if (!isLocale(nextLocale)) return
       document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`
-      document.documentElement.lang = nextLocale
-      setActiveLocale(nextLocale)
-      setActiveMessages(getDictionary(nextLocale))
+      setPending(
+        nextLocale === locale
+          ? null
+          : { locale: nextLocale, messages: getDictionary(nextLocale), basis: messages },
+      )
       router.refresh()
     },
-    [router],
+    [locale, messages, router],
   )
 
   const t = useCallback(

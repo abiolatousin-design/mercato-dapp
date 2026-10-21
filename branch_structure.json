@@ -1,0 +1,18 @@
+{
+  "default_branch": "develop",
+  "branches": [
+    "develop",
+    "feat/issue-233-fix-inventory-ignore-obsolete-file-parses-and",
+    "origin"
+  ],
+  "parent": {
+    "develop": null,
+    "feat/issue-233-fix-inventory-ignore-obsolete-file-parses-and": "develop",
+    "origin": "develop"
+  },
+  "order": [
+    "develop",
+    "feat/issue-233-fix-inventory-ignore-obsolete-file-parses-and",
+    "origin"
+  ]
+}

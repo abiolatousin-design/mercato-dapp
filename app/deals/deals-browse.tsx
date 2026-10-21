@@ -106,7 +106,7 @@ export function DealsBrowse({
     requestIdRef.current = requestId
     setIsLoading(true)
     try {
-      const payload: DealsBrowseResponse = await fetchDealsBrowse(next)
+      const payload: DealsBrowseResponse = await fetchDealsBrowse.fetch(next)
       if (requestId !== requestIdRef.current) return
       setDeals((prev) => (append ? [...prev, ...payload.deals] : payload.deals))
       setPage(payload.page)
